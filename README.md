@@ -101,10 +101,18 @@ tickets/
 - Python 3.11+
 - PostgreSQL running locally (or update `DATABASES` in `helpdesk/settings.py`)
 
-### 1. Clone and create a virtual environment
+### 1. Get the code and create a virtual environment
+Either clone it:
 ```bash
 git clone https://github.com/IanOtollo/helpdesk-ticketing-system.git
 cd helpdesk-ticketing-system
+```
+...or download it as a ZIP from the green **Code** button on GitHub and
+extract it, then open a terminal in the extracted folder.
+
+Then set up the environment (the `venv/` folder is intentionally not part of
+the repo — everyone creates their own):
+```bash
 python -m venv venv
 venv\Scripts\activate        # Windows
 # source venv/bin/activate   # macOS/Linux
@@ -117,6 +125,13 @@ Create a `.env` file in the project root:
 DB_PASSWORD=your_postgres_password
 EMAIL_HOST_USER=your_gmail_address
 EMAIL_HOST_PASSWORD=your_gmail_app_password
+
+# Optional — only needed if your local Postgres setup differs from the
+# defaults (database "helpdesk_db", user "postgres", localhost:5432)
+# DB_NAME=helpdesk_db
+# DB_USER=postgres
+# DB_HOST=localhost
+# DB_PORT=5432
 ```
 `EMAIL_HOST_PASSWORD` must be a
 [Gmail App Password](https://myaccount.google.com/apppasswords), not your
@@ -126,8 +141,8 @@ regular account password.
 ```bash
 createdb helpdesk_db
 ```
-(or the Postgres equivalent for your setup — see `DATABASES` in
-`helpdesk/settings.py` for the expected name/user/host/port)
+(or `createdb <your DB_NAME>` if you overrode it above — match whatever
+Postgres user/database you actually have locally)
 
 ### 4. Run migrations and create a superuser
 ```bash

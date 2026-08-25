@@ -1,0 +1,31 @@
+{% extends 'tickets/base.html' %}
+{% block content %}
+
+<div class="card">
+    <h2>Notifications</h2>
+
+    {% if notifications %}
+    <div class="table-scroll">
+    <table>
+        <tr>
+            <th>Time</th>
+            <th>Type</th>
+            <th>Message</th>
+            <th>Ticket</th>
+        </tr>
+        {% for notif in notifications %}
+        <tr style="{% if not notif.is_read %}background:#f0f6ff;{% endif %}">
+            <td>{{ notif.created_at }}</td>
+            <td>{{ notif.get_notification_type_display }}</td>
+            <td>{{ notif.message }}</td>
+            <td><a href="{% url 'ticket_detail' notif.ticket.id %}">#{{ notif.ticket.id }}</a></td>
+        </tr>
+        {% endfor %}
+    </table>
+    </div>
+    {% else %}
+        <p>No notifications yet.</p>
+    {% endif %}
+</div>
+
+{% endblock %}

@@ -1,0 +1,71 @@
+{% extends 'tickets/base.html' %}
+{% block content %}
+
+<div class="card">
+    <h2>{% if is_admin_user %}All Tickets{% elif is_agent_user %}Tickets{% else %}My Tickets{% endif %}</h2>
+
+    {% if unassigned_count is not None and unassigned_count > 0 %}
+        <p class="banner banner-warning">
+            <strong>{{ unassigned_count }} unassigned ticket{{ unassigned_count|pluralize }} awaiting action.</strong>
+        </p>
+    {% endif %}
+
+    {% if unassigned_count is None %}
+    <div class="actions-row">
+        <a href="{% url 'create_ticket' %}" class="btn">+ Submit New Ticket</a>
+    </div>
+    {% endif %}
+
+    {% if is_admin_user or is_agent_user %}
+    <div class="tab-group">
+        <a href="{% url 'my_tickets' %}" class="tab-link {% if not filter_param %}active{% endif %}">
+            {% if is_admin_user %}All Tickets{% else %}My Tickets + Unassigned{% endif %}
+        </a>
+        <a href="?filter=mine" class="tab-link {% if filter_param == 'mine' %}active{% endif %}">My Tickets Only</a>
+        <a href="?filter=unassigned" class="tab-link {% if filter_param == 'unassigned' %}active{% endif %}">Unassigned Only</a>
+    </div>
+    {% endif %}
+
+    <div class="table-scroll">
+    <table>
+        <tr>
+            <th>ID</th>
+            <th>Title</th>
+            <th>Category</th>
+            <th>Priority</th>
+            <th>Department</th>
+            <th>Location</th>
+            <th>Status</th>
+            <th>Requester</th>
+            <th>Created</th>
+            <th>Overdue</th>
+        </tr>
+        {% for ticket in tickets %}
+        <tr>
+            <td><a href="{% url 'ticket_detail' ticket.id %}">{{ ticket.id }}</a></td>
+            <td>{{ ticket.title }}</td>
+            <td>{{ ticket.category }}</td>
+            <td>{% if ticket.priority %}<span class="badge badge-priority-{{ ticket.priority.name|lower }}">{{ ticket.priority }}</span>{% else %}—{% endif %}</td>
+            <td>{{ ticket.department|default:"—" }}</td>
+            <td>{{ ticket.location|default:"—" }}</td>
+            <td><span class="badge badge-status-{{ ticket.status }}">{{ ticket.get_status_display }}</span></td>
+            <td>{{ ticket.requester }}</td>
+            <td>{{ ticket.created_at }}</td>
+            <td>
+                {% if ticket.is_overdue %}
+                    <span class="overdue">OVERDUE</span>
+                {% else %}
+                    —
+                {% endif %}
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="10">No tickets found.</td>
+        </tr>
+        {% endfor %}
+    </table>
+    </div>
+</div>
+
+{% endblock %}

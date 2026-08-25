@@ -1,0 +1,61 @@
+{% extends 'tickets/base.html' %}
+{% block content %}
+
+<div class="card">
+    <h2>Submit a Support Request</h2>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <p>
+            <label>Title:</label>
+            <input type="text" name="title" required>
+        </p>
+
+        <p>
+            <label>Description:</label>
+            <textarea name="description" rows="4" required></textarea>
+        </p>
+
+        <p>
+            <label>Category:</label>
+            <select name="category" required>
+                {% for category in categories %}
+                    <option value="{{ category.id }}">{{ category.name }}</option>
+                {% endfor %}
+            </select>
+        </p>
+
+        <p>
+            <label>Department:</label>
+            <select name="department" required>
+                {% for department in departments %}
+                    <option value="{{ department.id }}">{{ department.name }}</option>
+                {% endfor %}
+            </select>
+        </p>
+
+        <p>
+            <label>Location/Building:</label>
+            <select name="location">
+                <option value="">-- Not specified --</option>
+                {% for location in locations %}
+                    <option value="{{ location.id }}">{{ location.name }}</option>
+                {% endfor %}
+            </select>
+        </p>
+
+        <p>
+            <label>Contact Phone Number:</label>
+            <input type="text" name="contact_phone" placeholder="e.g. 0712345678" required>
+        </p>
+
+        <p>
+            <label>Attach an image (optional):</label>
+            <input type="file" name="attachment" accept="image/*">
+        </p>
+
+        <button type="submit" class="btn">Submit Ticket</button>
+    </form>
+</div>
+
+{% endblock %}

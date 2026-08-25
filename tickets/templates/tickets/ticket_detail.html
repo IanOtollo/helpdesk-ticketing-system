@@ -1,0 +1,99 @@
+{% extends 'tickets/base.html' %}
+{% block content %}
+
+<div class="card">
+    <h2>Ticket #{{ ticket.id }}: {{ ticket.title }}</h2>
+
+    <p><strong>Description:</strong> {{ ticket.description }}</p>
+    <p><strong>Category:</strong> {{ ticket.category }}</p>
+    <p><strong>Priority:</strong> {% if ticket.priority %}<span class="badge badge-priority-{{ ticket.priority.name|lower }}">{{ ticket.priority }}</span>{% else %}—{% endif %}</p>
+    <p><strong>Department:</strong> {{ ticket.department|default:"Not specified" }}</p>
+    <p><strong>Location/Building:</strong> {{ ticket.location|default:"Not specified" }}</p>
+    <p><strong>Status:</strong> <span class="badge badge-status-{{ ticket.status }}">{{ ticket.get_status_display }}</span>
+        {% if ticket.is_overdue %}
+            <span class="overdue"> — OVERDUE</span>
+        {% endif %}
+    </p>
+    <p><strong>Requester:</strong> {{ ticket.requester }}</p>
+    <p><strong>Requester Phone:</strong> {{ ticket.contact_phone }}</p>
+    <p><strong>Assigned Agent:</strong> {{ ticket.assigned_agent|default:"Unassigned" }}</p>
+    {% if ticket.assigned_agent %}
+    <p><strong>Agent Phone:</strong> {{ agent_phone|default:"Not set" }}</p>
+    {% endif %}
+    {% if ticket.attachment %}
+    <p><strong>Attachment:</strong> <a href="{{ ticket.attachment.url }}" target="_blank">View uploaded file</a></p>
+    {% endif %}
+    <p><strong>Created:</strong> {{ ticket.created_at }}</p>
+    <p><strong>Resolved:</strong> {{ ticket.resolved_at|default:"Not yet resolved" }}</p>
+</div>
+
+{% if is_agent_or_admin %}
+<div class="card">
+    <h3>Agent Actions</h3>
+
+    <form method="post" style="display:inline-block; margin-right:10px;">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="assign_to_me">
+        <button type="submit" class="btn">Assign to Me</button>
+    </form>
+
+    <form method="post" style="display:inline-block;">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="update_status">
+        <select name="status" style="width:auto; display:inline-block;">
+            <option value="open" {% if ticket.status == "open" %}selected{% endif %}>Open</option>
+            <option value="in_progress" {% if ticket.status == "in_progress" %}selected{% endif %}>In Progress</option>
+            <option value="resolved" {% if ticket.status == "resolved" %}selected{% endif %}>Resolved</option>
+            <option value="closed" {% if ticket.status == "closed" %}selected{% endif %}>Closed</option>
+        </select>
+        <button type="submit" class="btn btn-secondary">Update Status</button>
+    </form>
+</div>
+{% endif %}
+
+{% if is_admin_user %}
+<div class="card">
+    <h3>Administrator Actions</h3>
+
+    <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="assign_to_agent">
+        <label>Assign to agent:</label>
+        <select name="agent_id" required style="width:auto; display:inline-block;">
+            {% for agent in agents %}
+                <option value="{{ agent.id }}">{{ agent.username }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="btn">Reassign</button>
+    </form>
+</div>
+{% endif %}
+
+<div class="card">
+    <h3>Audit Trail</h3>
+    <p class="stat-label">Complete chronological history of every action taken on this ticket.</p>
+    <div class="table-scroll">
+    <table>
+        <tr>
+            <th>Time</th>
+            <th>Action</th>
+            <th>Performed By</th>
+            <th>Details</th>
+        </tr>
+        {% for log in audit_logs %}
+        <tr>
+            <td>{{ log.created_at }}</td>
+            <td>{{ log.get_action_display }}</td>
+            <td>{{ log.performed_by.username|default:"SYSTEM" }}</td>
+            <td>{{ log.details }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4">No audit history yet.</td></tr>
+        {% endfor %}
+    </table>
+    </div>
+</div>
+
+<p><a href="{% url 'my_tickets' %}">Back to ticket list</a></p>
+
+{% endblock %}

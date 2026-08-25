@@ -1,0 +1,126 @@
+{% extends 'tickets/base.html' %}
+{% block content %}
+
+<style>
+    .demo-creds-box {
+        position: fixed;
+        bottom: 16px;
+        right: 16px;
+        z-index: 20;
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-md);
+        padding: 16px;
+        width: 260px;
+        max-width: calc(100vw - 32px);
+    }
+    .demo-creds-title {
+        font-weight: 700;
+        color: var(--navy);
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin-bottom: 2px;
+    }
+    .demo-creds-hint { font-size: 11.5px; color: var(--muted); margin: 0 0 12px; }
+    .demo-creds-group { margin-bottom: 12px; }
+    .demo-creds-group:last-child { margin-bottom: 0; }
+    .demo-creds-role {
+        font-size: 10.5px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        padding: 2px 8px;
+        border-radius: 999px;
+        display: inline-block;
+        margin-bottom: 6px;
+    }
+    .demo-creds-role.role-administrator { background: #fdf0dc; color: #935a06; }
+    .demo-creds-role.role-ict-agent { background: #e3edf8; color: #2c567e; }
+    .demo-creds-role.role-requester { background: #eef0f3; color: #4b5563; }
+    .demo-cred-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        background: none;
+        border: 1px solid transparent;
+        border-radius: var(--radius-sm);
+        padding: 6px 8px;
+        margin-bottom: 2px;
+        cursor: pointer;
+        text-align: left;
+        font-size: 12px;
+        transition: background 0.15s ease, border-color 0.15s ease;
+    }
+    .demo-cred-row:hover { background: #f4f6f9; border-color: var(--border); }
+    .demo-cred-user { font-family: monospace; color: var(--text); font-weight: 600; }
+    .demo-cred-pass { font-family: monospace; color: var(--muted); }
+    @media (max-width: 640px) {
+        .demo-creds-box { position: static; width: auto; margin: 0 auto 24px; max-width: 420px; }
+    }
+</style>
+
+<div class="card" style="max-width: 420px; margin: 40px auto;">
+    <h2>Log In</h2>
+    <form method="post">
+        {% csrf_token %}
+        {% for error in form.non_field_errors %}
+            <p class="banner banner-error">{{ error }}</p>
+        {% endfor %}
+        {% for field in form %}
+        <div class="form-field">
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% for error in field.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+        </div>
+        {% endfor %}
+        <button type="submit" class="btn">Log in</button>
+    </form>
+    <p style="margin-top:16px;">Don't have an account? <a href="{% url 'register' %}">Register here</a></p>
+</div>
+
+<div class="demo-creds-box">
+    <div class="demo-creds-title">Demo Credentials</div>
+    <p class="demo-creds-hint">Click a row to autofill the form.</p>
+
+    <div class="demo-creds-group">
+        <span class="demo-creds-role role-administrator">Administrator</span>
+        <button type="button" class="demo-cred-row" onclick="fillDemoLogin('admin','admin123')">
+            <span class="demo-cred-user">admin</span><span class="demo-cred-pass">admin123</span>
+        </button>
+    </div>
+
+    <div class="demo-creds-group">
+        <span class="demo-creds-role role-ict-agent">ICT Agents</span>
+        <button type="button" class="demo-cred-row" onclick="fillDemoLogin('agent_mwangi','demo12345')">
+            <span class="demo-cred-user">agent_mwangi</span><span class="demo-cred-pass">demo12345</span>
+        </button>
+        <button type="button" class="demo-cred-row" onclick="fillDemoLogin('agent_amina','demo12345')">
+            <span class="demo-cred-user">agent_amina</span><span class="demo-cred-pass">demo12345</span>
+        </button>
+    </div>
+
+    <div class="demo-creds-group">
+        <span class="demo-creds-role role-requester">Requesters</span>
+        <button type="button" class="demo-cred-row" onclick="fillDemoLogin('mary_wanjiku','demo12345')">
+            <span class="demo-cred-user">mary_wanjiku</span><span class="demo-cred-pass">demo12345</span>
+        </button>
+        <button type="button" class="demo-cred-row" onclick="fillDemoLogin('peter_ochieng','demo12345')">
+            <span class="demo-cred-user">peter_ochieng</span><span class="demo-cred-pass">demo12345</span>
+        </button>
+        <button type="button" class="demo-cred-row" onclick="fillDemoLogin('grace_mwikali','demo12345')">
+            <span class="demo-cred-user">grace_mwikali</span><span class="demo-cred-pass">demo12345</span>
+        </button>
+    </div>
+</div>
+
+<script>
+    function fillDemoLogin(username, password) {
+        document.getElementById('id_username').value = username;
+        document.getElementById('id_password').value = password;
+    }
+</script>
+
+{% endblock %}

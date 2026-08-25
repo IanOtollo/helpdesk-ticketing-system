@@ -1,0 +1,59 @@
+{% extends 'tickets/base.html' %}
+{% block content %}
+
+<div class="card">
+    <h2>Manage Users</h2>
+    <p class="stat-label" style="margin-bottom: 20px;">
+        Appoint Requesters as ICT Agents or Administrators, and assign each agent a
+        specialty. New tickets in a matching category are auto-assigned to a specialist first.
+    </p>
+
+    <div class="user-list">
+        {% for row in user_rows %}
+        <div class="user-row">
+            <div class="user-row-info">
+                <strong>{{ row.user.username }}</strong>
+                <div class="user-row-email">{{ row.user.email|default:"No email on file" }}</div>
+            </div>
+
+            <span class="role-chip role-chip-{{ row.role|slugify }}">
+                {% if row.role == 'ICT Agents' %}ICT Agent{% elif row.role == 'Administrators' %}Administrator{% else %}Requester{% endif %}
+                {% if row.role == 'ICT Agents' and row.specialty %} &middot; {{ row.specialty.name }}{% endif %}
+            </span>
+
+            {% if row.user == request.user %}
+                <span class="stat-label" style="margin:0;">This is you</span>
+            {% else %}
+            <form method="post" class="role-form">
+                {% csrf_token %}
+                <input type="hidden" name="user_id" value="{{ row.user.id }}">
+                <select name="role" class="role-select" onchange="toggleSpecialty(this)">
+                    <option value="Requesters" {% if row.role == 'Requesters' %}selected{% endif %}>Requester</option>
+                    <option value="ICT Agents" {% if row.role == 'ICT Agents' %}selected{% endif %}>ICT Agent</option>
+                    <option value="Administrators" {% if row.role == 'Administrators' %}selected{% endif %}>Administrator</option>
+                </select>
+                <select name="specialty" class="specialty-select" {% if row.role != 'ICT Agents' %}disabled{% endif %}>
+                    <option value="">No specialty</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat.id }}" {% if row.specialty == cat %}selected{% endif %}>{{ cat.name }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="btn btn-secondary">Save</button>
+            </form>
+            {% endif %}
+        </div>
+        {% empty %}
+        <p>No users found.</p>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+    function toggleSpecialty(select) {
+        const specialtySelect = select.closest('form').querySelector('.specialty-select');
+        specialtySelect.disabled = select.value !== 'ICT Agents';
+        if (specialtySelect.disabled) specialtySelect.value = '';
+    }
+</script>
+
+{% endblock %}

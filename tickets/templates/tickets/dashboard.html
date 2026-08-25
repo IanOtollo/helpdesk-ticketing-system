@@ -1,0 +1,188 @@
+{% extends 'tickets/base.html' %}
+{% load static %}
+{% block content %}
+
+<div class="card">
+    <h2>Administrator Dashboard</h2>
+    <a href="{% url 'dashboard_export' %}" class="btn">Download Full Report (CSV)</a>
+</div>
+
+<div class="chart-row">
+    <div class="card">
+        <h3>Total Tickets</h3>
+        <p class="stat-value">{{ total_tickets }}</p>
+    </div>
+    <div class="card">
+        <h3>Overdue Tickets</h3>
+        <p class="stat-value {% if overdue_count > 0 %}overdue{% endif %}">{{ overdue_count }}</p>
+    </div>
+    <div class="card">
+        <h3>Average Resolution Time</h3>
+        <p class="stat-value" style="font-size:22px;">
+            {% if avg_hours is not None %}{{ avg_hours }} hours{% else %}—{% endif %}
+        </p>
+    </div>
+</div>
+
+{{ overdue_labels|json_script:"overdue-labels" }}
+{{ overdue_data|json_script:"overdue-data" }}
+{{ location_labels|json_script:"location-labels" }}
+{{ location_totals|json_script:"location-totals" }}
+{{ agent_labels|json_script:"agent-labels" }}
+{{ agent_assigned|json_script:"agent-assigned" }}
+{{ agent_resolved|json_script:"agent-resolved" }}
+
+<div class="card">
+    <h3>Overdue Tickets by Category</h3>
+    <p class="stat-label">Which issue types are most frequently breaching resolution time.</p>
+    <canvas id="overdueChart" style="max-height:280px;"></canvas>
+    <div class="table-scroll">
+    <table style="margin-top:16px;">
+        <tr><th>Category</th><th>Overdue Count</th></tr>
+        {% for name, count in overdue_by_category %}
+        <tr><td>{{ name }}</td><td class="overdue">{{ count }}</td></tr>
+        {% empty %}
+        <tr><td colspan="2">No overdue tickets.</td></tr>
+        {% endfor %}
+    </table>
+    </div>
+</div>
+
+<div class="card">
+    <h3>Requests by Location</h3>
+    <p class="stat-label">Locations generating the most requests, and their most common issue type.</p>
+    <canvas id="locationChart" style="max-height:280px;"></canvas>
+    <div class="table-scroll">
+    <table style="margin-top:16px;">
+        <tr><th>Location</th><th>Total Requests</th><th>Most Common Category</th></tr>
+        {% for row in location_breakdown %}
+        <tr>
+            <td>{{ row.location }}</td>
+            <td>{{ row.total }}</td>
+            <td>{{ row.top_category }} ({{ row.top_category_count }})</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="3">No location data available.</td></tr>
+        {% endfor %}
+    </table>
+    </div>
+</div>
+
+<div class="card">
+    <h3>Agent Performance</h3>
+    <p class="stat-label">Tickets assigned versus resolved per agent.</p>
+    <canvas id="agentChart" style="max-height:280px;"></canvas>
+    <div class="table-scroll">
+    <table style="margin-top:16px;">
+        <tr><th>Agent</th><th>Tickets Assigned</th><th>Tickets Resolved</th></tr>
+        {% for row in agent_stats %}
+        <tr>
+            <td>{{ row.agent }}</td>
+            <td>{{ row.assigned }}</td>
+            <td>{{ row.resolved }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="3">No agents found.</td></tr>
+        {% endfor %}
+    </table>
+    </div>
+</div>
+
+<div class="card">
+    <h3>Automation Activity</h3>
+    <p class="stat-label">System actions taken without human intervention.</p>
+    <div class="table-scroll">
+    <table>
+        <tr><th>Action</th><th>Count</th><th>Description</th></tr>
+        <tr>
+            <td>Auto-Assigned</td>
+            <td><strong>{{ auto_assigned_count }}</strong></td>
+            <td>Tickets routed to agents by workload balancing</td>
+        </tr>
+        <tr>
+            <td>Auto-Escalated (Level 1)</td>
+            <td><strong class="{% if escalated_count > 0 %}overdue{% endif %}">{{ escalated_count }}</strong></td>
+            <td>Overdue tickets reassigned to Administrator</td>
+        </tr>
+        <tr>
+            <td>Escalated (Level 2 — Urgent)</td>
+            <td><strong class="{% if escalated_l2_count > 0 %}overdue{% endif %}">{{ escalated_l2_count }}</strong></td>
+            <td>Still unresolved after 2x SLA — all Administrators alerted</td>
+        </tr>
+        <tr>
+            <td>Auto-Closed</td>
+            <td><strong>{{ auto_closed_count }}</strong></td>
+            <td>Resolved tickets closed after 48hrs inactivity</td>
+        </tr>
+        <tr>
+            <td>Auto-Priority</td>
+            <td><strong>{{ total_tickets }}</strong></td>
+            <td>All tickets — priority set by category rules, not requester</td>
+        </tr>
+    </table>
+    </div>
+</div>
+
+<div class="card">
+    <h3>Recent System Activity</h3>
+    <p class="stat-label">Last 15 audit log entries across all tickets.</p>
+    <div class="table-scroll">
+    <table>
+        <tr>
+            <th>Time</th>
+            <th>Ticket</th>
+            <th>Action</th>
+            <th>Performed By</th>
+            <th>Details</th>
+        </tr>
+        {% for log in recent_audit_logs %}
+        <tr>
+            <td>{{ log.created_at }}</td>
+            <td><a href="{% url 'ticket_detail' log.ticket_id %}">#{{ log.ticket_id }}</a></td>
+            <td>{{ log.get_action_display }}</td>
+            <td>{{ log.performed_by.username|default:"SYSTEM" }}</td>
+            <td>{{ log.details }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5">No audit history yet.</td></tr>
+        {% endfor %}
+    </table>
+    </div>
+</div>
+
+<script src="{% static 'tickets/js/chart.umd.min.js' %}"></script>
+<script>
+    const overdueLabels = JSON.parse(document.getElementById('overdue-labels').textContent);
+    const overdueData = JSON.parse(document.getElementById('overdue-data').textContent);
+    const locationLabels = JSON.parse(document.getElementById('location-labels').textContent);
+    const locationTotals = JSON.parse(document.getElementById('location-totals').textContent);
+    const agentLabels = JSON.parse(document.getElementById('agent-labels').textContent);
+    const agentAssigned = JSON.parse(document.getElementById('agent-assigned').textContent);
+    const agentResolved = JSON.parse(document.getElementById('agent-resolved').textContent);
+
+    new Chart(document.getElementById('overdueChart'), {
+        type: 'bar',
+        data: { labels: overdueLabels, datasets: [{ label: 'Overdue Tickets', data: overdueData, backgroundColor: '#c0392b' }] },
+        options: { scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }, plugins: { legend: { display: false } } }
+    });
+
+    new Chart(document.getElementById('locationChart'), {
+        type: 'bar',
+        data: { labels: locationLabels, datasets: [{ label: 'Total Requests', data: locationTotals, backgroundColor: '#3a6ea5' }] },
+        options: { scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }, plugins: { legend: { display: false } } }
+    });
+
+    new Chart(document.getElementById('agentChart'), {
+        type: 'bar',
+        data: {
+            labels: agentLabels,
+            datasets: [
+                { label: 'Assigned', data: agentAssigned, backgroundColor: '#7d5ba6' },
+                { label: 'Resolved', data: agentResolved, backgroundColor: '#4a8f4a' }
+            ]
+        },
+        options: { scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+    });
+</script>
+
+{% endblock %}

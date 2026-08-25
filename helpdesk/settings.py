@@ -119,15 +119,21 @@ USE_TZ = True
 
 
 # Email
-# Real delivery via Gmail SMTP. To fall back to the console backend for local
-# dev (emails print to the terminal instead of sending), swap the line below
-# for: EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# Real delivery via Gmail SMTP when credentials are configured in .env.
+# Without them, falls back to the console backend (emails print to the
+# terminal instead of sending) so the app still runs for anyone who hasn't
+# set up their own Gmail App Password yet.
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
+
+if EMAIL_HOST_USER and EMAIL_HOST_PASSWORD:
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+else:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = config('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = 'helpdesk@mombasa.go.ke'
 
 

@@ -126,6 +126,9 @@ DB_PASSWORD=your_postgres_password
 EMAIL_HOST_USER=your_gmail_address
 EMAIL_HOST_PASSWORD=your_gmail_app_password
 
+# Optional — leave EMAIL_HOST_USER/EMAIL_HOST_PASSWORD out entirely to run
+# without real email; notifications will just print to the terminal instead.
+
 # Optional — only needed if your local Postgres setup differs from the
 # defaults (database "helpdesk_db", user "postgres", localhost:5432)
 # DB_NAME=helpdesk_db

@@ -160,6 +160,11 @@ dashboard by default, everyone else on their ticket list.
 | `auto_escalate` | Manually run the SLA-warning + escalation checks (also runs automatically every 10 min) |
 | `auto_close` | Manually run the auto-closure check (also runs automatically every 10 min) |
 
+## Credits
+
+Built by [Ian Otollo](https://github.com/IanOtollo) and
+[Joel Majaliwa](https://github.com/majaliwa-joel) as project partners.
+
 ## License
 
 This project was built as a final-year academic project for Mombasa County's
